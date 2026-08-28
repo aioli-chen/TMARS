@@ -847,3 +847,80 @@ ros2 topic pub -r 10 \
 > # 設定為船體坐標系 (BODY_NED)
 > ros2 param set /mavros/setpoint_velocity mav_frame BODY_NEDㄋ
 > ```
+
+---
+
+# 8. 範例展演
+
+在大家已經有足夠的知識後，我們將引領你看 MAVROS 可以做到甚麼事情。我們採用 Huang, Yuan Kai 的GitHub專案：**[JetSeaAI/Blueboat](https://github.com/JetSeaAI/Blueboat)**。，來進行技術展示與解說。本章不複製全部程式碼，只提取部分核心重點，方便大家對照 GitHub 原始碼進行開發與擴充。
+
+---
+
+### 8.1 Docker 容器化開發環境 (`moos-ros2-base`)
+
+為了避免因作業系統版本、ROS 2 相依套件或 Python 環境不一致導致的編譯錯誤，專案採用了 Docker 容器化技術。
+
+* **環境路徑**：`Docker/moos-ros2-base/`
+* **容器特色**：
+    * 預裝 **ROS 2**、**MAVROS**、**Zenoh** 與 **MOOS-IvP** 海洋自律架構環境。
+    * 透過 `environment.sh` 與 `/ros_entrypoint.sh` 自動載入所有相依變數與工作空間（`ros2_ws`）。
+    * **快速啟動流程**：
+```bash
+# 1. 進入目錄並啟動容器
+cd Docker/moos-ros2-base
+docker compose up -d
+
+# 2. 進入開發容器
+docker exec -it moos-ros2-base_debug bash
+```
+
+---
+
+### 8.2 長距離無線中繼與通訊優化 (`rmw_zenoh` / `zenohd`)
+
+在海上或戶外開闊水域中，船端與地面基地台（BaseStation）透過 2.4GHz 無線網橋傳輸資料。傳統 ROS 2 的 DDS 協定在面對弱訊號或封包抖動時可能出現延遲或卡頓。
+
+* **解決方案**：專案整合了 **Zenoh**（`zenohd` / `rmw_zenoh`）作為輕量化分散式通訊中繼，這也是我們在 JETSEA 中無人船使用的通訊手段。
+
+* **運作機制**：利用 Zenoh 高輸送量、低頻寬佔用且適應長距離無線網橋的特性，確保多節點與遠端地面站之間的遙測數據即時同步。
+
+---
+
+### 8.3 MOOS 與 ROS 2 的跨平台橋接 (`mbpais_bridge`)
+
+海洋自主系統中，MIT 開發的 **MOOS-IvP** 常被用作高階多載具協同與行為決策（Behavior-Based Autonomy），相信大家已經在新生訓練中略有涉略。而 **ROS 2** 則擅長感測器驅動、SLAM 與底層控制。
+
+* **模組角色**：`mbpais_bridge` 是 MOOSDB 與 ROS 2 之間的雙向翻譯器。
+
+
+* **資料流向**：
+```
+【高階決策】MOOS-IvP (行為決策庫)
+       ▲
+       │ (變數映射 / mbpais_bridge)
+       ▼
+【中介控制】ROS 2 / MAVROS (速度與航向 Setpoint)
+       ▲
+       │ (MAVLink 封包 / Wi-Fi)
+       ▼
+【船端硬體】BlueOS ➔ ArduRover ➔ Navigator (實體推力輸出)
+
+```
+
+
+
+---
+
+### 8.4 控制層封裝與程式化控制 SOP
+
+在專案的 `ros2_ws` 中，將第 7 章的手動指令進一步封裝成自動化節點：
+
+1. **自動連線檢查**：節點啟動時訂閱 `/mavros/state`，確認與船隻心跳連線成功（`connected: true`）。
+
+2. **模式與解鎖自動化**：
+    * 透過 Client 呼叫 `/mavros/set_mode` 服務切換至 **`GUIDED` 模式**。
+
+    * 呼叫 `/mavros/cmd/arming` 服務完成 **Arming（解鎖）**。
+
+3. **連續速度發布**：
+    * 建立 Publisher 持續向 `/mavros/setpoint_velocity/cmd_vel_unstamped` 主題以 **10 Hz** 頻率發送 `geometry_msgs/Twist`（如線速度 `linear.x` 與轉向角速度 `angular.z`），避免觸發自駕核心的逾時安全保護。
