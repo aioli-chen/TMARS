@@ -596,17 +596,13 @@ BlueBoat 的總有效載荷為 **15 公斤（33 磅）**（包含電池與所有
 ### 6.3 航行控制模式與頂部導航燈閃爍對照
 
 #### 1. 五大常用控制模式 (Control Modes)
-* **手動模式 (Manual)：**  
-搖桿油門與轉向直接映射至左右推進器差速輸出，不依賴 GPS。強烈建議在控制器上始終配置一個實體切換按鈕。
-* **特技模式 (Acro)：**  
-橫向搖桿控制轉彎速率（由 `ACRO_TURN_RATE` 控制），回中時系統自動保持當前航向並補償風浪外力。
-* **懸停模式 (Loiter)：**  
-在設定的漂移半徑（`LOIT_RADIUS`，0~20 公尺）內隨波漂移；一旦超出範圍，系統自動轉向並以最高 0.5 m/s 修正回原點。
-* **自動模式 (Auto)：**  
-自動依序執行已上傳的航點或 Survey 網格任務。任務中可隨時手動切換至 Manual 接管；重新切回 Auto 會從最後中斷指令繼續執行。
-* **引導模式 (Guided)：**  
-於 QGC 地圖上點擊任意位置下達「Click to Go」指令，載具即自主導航前往。
-
+| 模式名稱 (Mode) | 說明 (Description) |
+| :--- | :--- |
+| **手動模式 (Manual)** | 搖桿油門與轉向直接映射至左右推進器差速輸出，不依賴 GPS。強烈建議在控制器上始終配置一個實體切換按鈕。 |
+| **特技模式 (Acro)** | 橫向搖桿控制轉彎速率（由 `ACRO_TURN_RATE` 控制），回中時系統自動保持當前航向並補償風浪外力。 |
+| **懸停模式 (Loiter)** | 在設定的漂移半徑（`LOIT_RADIUS`，0~20 公尺）內隨波漂移；一旦超出範圍，系統自動轉向並以最高 0.5 m/s 修正回原點。 |
+| **自動模式 (Auto)** | 自動依序執行已上傳的航點或 Survey 網格任務。任務中可隨時手動切換至 Manual 接管；重新切回 Auto 會從最後中斷指令繼續執行。 |
+| **引導模式 (Guided)** | 於 QGC 地圖上點擊任意位置下達「Click to Go」指令，載具即自主導航前往。 |
 
 #### 2. 船頂導航燈號辨識表 (NavLight Flash Patterns)
 | 燈號閃爍模式 (Light Pattern) | 武裝狀態 (Arm Status) | 當前模式 (Control Mode) |
@@ -616,7 +612,6 @@ BlueBoat 的總有效載荷為 **15 公斤（33 磅）**（包含電池與所有
 | **雙閃 (Double Pulse, 1Hz)** | Armed (已解鎖) | Manual / Acro / Steering / Simple |
 | **快三閃 (Fast Triple Pulse)** | Armed (已解鎖) | Auto / Guided / RTL / Smart RTL |
 | **常亮 (Solid On)** | Armed (已解鎖) | Loiter |
-
 ---
 
 ### 6.4 任務前整備、投放發射與任務執行 SOP
@@ -845,7 +840,7 @@ ros2 topic pub -r 10 \
 > ros2 param get /mavros/setpoint_velocity mav_frame
 > 
 > # 設定為船體坐標系 (BODY_NED)
-> ros2 param set /mavros/setpoint_velocity mav_frame BODY_NEDㄋ
+> ros2 param set /mavros/setpoint_velocity mav_frame BODY_NED
 > ```
 
 ---
@@ -888,7 +883,7 @@ docker exec -it moos-ros2-base_debug bash
 
 ### 8.3 MOOS 與 ROS 2 的跨平台橋接 (`mbpais_bridge`)
 
-海洋自主系統中，MIT 開發的 **MOOS-IvP** 常被用作高階多載具協同與行為決策（Behavior-Based Autonomy），相信大家已經在新生訓練中略有涉略。而 **ROS 2** 則擅長感測器驅動、SLAM 與底層控制。
+海洋自主系統中，MIT 開發的 **MOOS-IvP** 常被用作高階多載具協同與行為決策（Behavior-Based Autonomy），相信大家已經在新生訓練中略有涉獵。而 **ROS 2** 則擅長感測器驅動、SLAM 與底層控制。
 
 * **模組角色**：`mbpais_bridge` 是 MOOSDB 與 ROS 2 之間的雙向翻譯器。
 
